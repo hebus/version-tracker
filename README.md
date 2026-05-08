@@ -63,7 +63,7 @@ Open the settings panel (gear icon, top-right) to configure:
 
 | Setting | Description | Default |
 |---|---|---|
-| Verdaccio URL | Base URL of your private npm registry | `https://npm.sinequa.com` |
+| Verdaccio URL | Base URL of your private npm registry | `https://npm.your-comapny.com` |
 | Refresh interval | Auto-refresh period in seconds | `3600` (1 h) |
 | Package groups | Named groups of packages to track | — |
 
