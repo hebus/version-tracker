@@ -47,6 +47,9 @@ version-tracker/
 │   │       └── config.rs               ← Lecture / écriture config locale
 │   ├── capabilities/
 │   │   └── default.json                ← Permissions Tauri (store, notification)
+│   ├── icons/                          ← Icônes générées (ne pas éditer à la main)
+│   ├── icons-source/
+│   │   └── icon.svg                    ← Source de l'icône (régénérer : npx tauri icon src-tauri/icons-source/icon.svg)
 │   └── tauri.conf.json
 │
 ├── src/                                ← Frontend React
