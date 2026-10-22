@@ -19,7 +19,7 @@ interface GroupSectionProps {
   onRefresh: (pkg: string) => void;
 }
 
-function GroupSection({ group, queryMap, search, onRefresh }: GroupSectionProps) {
+function GroupSection({ group, queryMap, verdaccioUrl, search, onRefresh }: GroupSectionProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   const filtered = group.packages.filter(
@@ -55,6 +55,7 @@ function GroupSection({ group, queryMap, search, onRefresh }: GroupSectionProps)
               key={pkg}
               versions={query?.data ?? EMPTY_VERSIONS(pkg)}
               isLoading={query?.isFetching ?? true}
+              verdaccioUrl={verdaccioUrl}
               onRefresh={() => onRefresh(pkg)}
             />
           );

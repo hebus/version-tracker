@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { RefreshCw, ChevronDown } from "lucide-react";
+import { RefreshCw, ChevronDown, ExternalLink } from "lucide-react";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { computeStatus, computeVersionStatus } from "../types";
 import type { PackageVersions, PackageStatus, TagInfo } from "../types";
 
 interface Props {
   versions: PackageVersions;
   isLoading: boolean;
+  verdaccioUrl: string;
   onRefresh: () => void;
 }
 
@@ -40,9 +42,13 @@ function formatDate(iso: string | null): string {
 function VersionCell({
   info,
   isLoading,
+  url,
+  registryLabel,
 }: {
   info: { latest: string | null; error: string | null };
   isLoading: boolean;
+  url: string;
+  registryLabel: string;
 }) {
   if (isLoading) return <span className="text-gray-400 text-sm">...</span>;
   if (info.error === "not_found")
@@ -54,8 +60,17 @@ function VersionCell({
       </span>
     );
   return (
-    <span className="font-mono text-sm font-medium text-gray-900">
-      {info.latest ?? "—"}
+    <span className="inline-flex items-center gap-1.5">
+      <span className="font-mono text-sm font-medium text-gray-900">
+        {info.latest ?? "—"}
+      </span>
+      <button
+        onClick={() => openUrl(url)}
+        className="text-gray-300 hover:text-blue-600 transition-colors"
+        title={`Ouvrir sur ${registryLabel}`}
+      >
+        <ExternalLink className="w-3.5 h-3.5" />
+      </button>
     </span>
   );
 }
@@ -99,8 +114,11 @@ function TagRow({
   );
 }
 
-export function PackageRow({ versions, isLoading, onRefresh }: Props) {
+export function PackageRow({ versions, isLoading, verdaccioUrl, onRefresh }: Props) {
   const [expanded, setExpanded] = useState(false);
+
+  const npmUrl = `https://www.npmjs.com/package/${versions.name}`;
+  const verdaccioPackageUrl = `${verdaccioUrl.replace(/\/+$/, "")}/-/web/detail/${versions.name}`;
 
   const status: PackageStatus = isLoading ? "loading" : computeStatus(versions);
 
@@ -139,7 +157,12 @@ export function PackageRow({ versions, isLoading, onRefresh }: Props) {
 
         {/* npmjs latest */}
         <td className="py-3 px-4">
-          <VersionCell info={versions.npm} isLoading={isLoading} />
+          <VersionCell
+            info={versions.npm}
+            isLoading={isLoading}
+            url={npmUrl}
+            registryLabel="npmjs"
+          />
         </td>
         <td className="py-3 px-4 text-sm text-gray-400">
           {isLoading ? "" : formatDate(versions.npm.publishedAt)}
@@ -147,7 +170,12 @@ export function PackageRow({ versions, isLoading, onRefresh }: Props) {
 
         {/* Verdaccio latest */}
         <td className="py-3 px-4">
-          <VersionCell info={versions.verdaccio} isLoading={isLoading} />
+          <VersionCell
+            info={versions.verdaccio}
+            isLoading={isLoading}
+            url={verdaccioPackageUrl}
+            registryLabel="Verdaccio"
+          />
         </td>
         <td className="py-3 px-4 text-sm text-gray-400">
           {isLoading ? "" : formatDate(versions.verdaccio.publishedAt)}
