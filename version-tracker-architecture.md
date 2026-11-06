@@ -70,8 +70,9 @@ version-tracker/
 │   ├── App.tsx
 │   └── main.tsx                        ← QueryClientProvider + ErrorBoundary
 │
-├── .github/workflows/release.yml       ← Build + signature + publication sur tag v*
-├── scripts/bump-version.mjs            ← npm run bump -- X.Y.Z
+├── .github/workflows/release.yml       ← release-please + build/signature/publication des releases
+├── release-please-config.json          ← Config release-please (fichiers de version à mettre à jour)
+├── .release-please-manifest.json       ← Version courante suivie par release-please
 ├── package.json
 └── vite.config.ts
 ```
@@ -297,16 +298,14 @@ Tauri refuse tout binaire non signé avec la clé correspondant à `pubkey` (pai
 - **Clé privée** : secrets GitHub `TAURI_SIGNING_PRIVATE_KEY` (+ `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`, vide si la clé n'a pas de mot de passe). **À sauvegarder** : sans elle, les installations existantes ne pourront plus jamais se mettre à jour.
 - Ce n'est pas une signature de code : sans certificat, Windows SmartScreen et macOS Gatekeeper avertissent à la première installation.
 
-### Publier une release
+### Publier une release (release-please)
 
-```bash
-npm run bump -- 0.2.0                              # package.json, package-lock.json, tauri.conf.json, Cargo.toml
-cargo check --manifest-path src-tauri/Cargo.toml   # met à jour Cargo.lock
-git commit -am "chore(release): v0.2.0"
-git tag v0.2.0 && git push origin develop v0.2.0
-```
+Le versionnement et la publication sont automatisés par [release-please](https://github.com/googleapis/release-please) (`release-please-config.json`, `.release-please-manifest.json`), à partir des **Conventional Commits** :
 
-`.github/workflows/release.yml` se déclenche sur le tag `v*` : il vérifie que le tag correspond à la version de `tauri.conf.json`, construit Windows, macOS (arm64 + x64) et Linux avec `tauri-action`, signe, crée la release en **brouillon**, puis un job `publish` la publie quand toutes les plateformes ont terminé (l'endpoint `latest.json` ne sert donc jamais une release incomplète). Chaque release doit avoir une version strictement supérieure à la précédente.
+1. Chaque push sur `develop` exécute le job `release-please` de `.github/workflows/release.yml`, qui ouvre ou met à jour une **PR de release** (`chore(release): X.Y.Z`) : version dans `package.json`, `package-lock.json`, `tauri.conf.json`, `Cargo.toml` et `Cargo.lock`, plus `CHANGELOG.md`. Tant que la version est en 0.x : `fix` et `feat` → patch, `feat!` / `BREAKING CHANGE` → minor.
+2. **Fusionner cette PR** crée le tag `vX.Y.Z` et la release GitHub (corps = changelog), puis les jobs `build` s'exécutent **dans le même workflow** (un tag créé avec `GITHUB_TOKEN` ne déclenche pas d'autre workflow) : Windows, macOS arm64 + x64, Linux, avec `tauri-action`, qui signe et attache installeurs, `.sig` et `latest.json` à la release existante.
+
+Prérequis : secrets `TAURI_SIGNING_PRIVATE_KEY` (+ `..._PASSWORD`) et réglage du dépôt *Allow GitHub Actions to create and approve pull requests*. La release n'est plus un brouillon : elle existe quelques minutes avant que les installeurs soient attachés, et `latest.json` répond 404 entre-temps (l'updater ignore l'erreur). Si un build échoue, relancer les jobs en échec.
 
 ---
 
