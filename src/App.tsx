@@ -9,6 +9,8 @@ import { useConfig } from "./hooks/useConfig";
 import { usePackageVersions } from "./hooks/usePackageVersions";
 import { useToast } from "./hooks/useToast";
 import { useNotifications } from "./hooks/useNotifications";
+import { useUpdater } from "./hooks/useUpdater";
+import { UpdateBanner } from "./components/UpdateBanner";
 import type { VersionEvent } from "./types";
 
 export default function App() {
@@ -17,6 +19,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const { toasts, addToast, dismissToast } = useToast();
+  const updater = useUpdater();
   const { notifications, addNotification, markRead, markAllRead, remove, unreadCount } =
     useNotifications();
 
@@ -40,6 +43,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
+      {!updater.dismissed && (
+        <UpdateBanner
+          status={updater.status}
+          version={updater.version}
+          progress={updater.progress}
+          error={updater.error}
+          onInstall={updater.install}
+          onDismiss={updater.dismiss}
+        />
+      )}
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Version Tracker</h1>

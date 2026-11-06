@@ -46,7 +46,7 @@ version-tracker/
 │   │       ├── fetch_versions.rs       ← Appels registres npm (tous dist-tags)
 │   │       └── config.rs               ← Lecture / écriture config locale
 │   ├── capabilities/
-│   │   └── default.json                ← Permissions Tauri (store, notification)
+│   │   └── default.json                ← Permissions Tauri (store, notification, updater, process)
 │   ├── icons/                          ← Icônes générées (ne pas éditer à la main)
 │   ├── icons-source/
 │   │   └── icon.svg                    ← Source de l'icône (régénérer : npx tauri icon src-tauri/icons-source/icon.svg)
@@ -58,16 +58,20 @@ version-tracker/
 │   │   ├── PackageTable.tsx            ← Tableau groupé avec en-têtes de section
 │   │   ├── PackageRow.tsx              ← Ligne latest + sous-lignes par tag
 │   │   ├── SearchBar.tsx
-│   │   └── Settings.tsx                ← Gestion groupes, packages, URL, intervalle
+│   │   ├── Settings.tsx                ← Gestion groupes, packages, URL, intervalle
+│   │   └── UpdateBanner.tsx            ← Bannière « nouvelle version disponible » (installer / plus tard)
 │   ├── hooks/
 │   │   ├── usePackageVersions.ts       ← TanStack Query → Map<pkg, query>
-│   │   └── useConfig.ts                ← Chargement / sauvegarde config
+│   │   ├── useConfig.ts                ← Chargement / sauvegarde config
+│   │   └── useUpdater.ts               ← Vérification des mises à jour (GitHub Releases) + installation
 │   ├── types/
 │   │   └── index.ts                    ← Types, computeStatus, helpers
 │   ├── index.css                       ← @import "tailwindcss"
 │   ├── App.tsx
 │   └── main.tsx                        ← QueryClientProvider + ErrorBoundary
 │
+├── .github/workflows/release.yml       ← Build + signature + publication sur tag v*
+├── scripts/bump-version.mjs            ← npm run bump -- X.Y.Z
 ├── package.json
 └── vite.config.ts
 ```
@@ -269,6 +273,40 @@ tokio = { version = "1", features = ["rt", "macros"] }
   }
 }
 ```
+
+---
+
+## Mise à jour automatique
+
+L'app vérifie GitHub Releases au démarrage (après 5 s) puis toutes les 6 h. Rien n'est téléchargé tant que l'utilisateur n'a pas cliqué sur **Installer et redémarrer**.
+
+| Élément | Rôle |
+|---------|------|
+| `tauri-plugin-updater` + `tauri-plugin-process` | Vérification/installation puis `relaunch()`. Permissions `updater:default` et `process:allow-restart` dans `capabilities/default.json` |
+| `hooks/useUpdater.ts` | `check()` planifié, état `idle → available → installing → error`, progression du téléchargement. Plugins importés dynamiquement : inerte dans `npm run dev` hors webview |
+| `components/UpdateBanner.tsx` | Bannière en haut de l'écran : version disponible, bouton d'installation, croix « Plus tard » (rouverte si une version plus récente sort) |
+| `plugins.updater` (`tauri.conf.json`) | `pubkey` + endpoint `https://github.com/hebus/version-tracker/releases/latest/download/latest.json` ; `installMode: passive` sous Windows |
+| `bundle.createUpdaterArtifacts` | Produit les `.sig` à côté des installeurs |
+
+Une erreur de vérification (hors-ligne, pas encore de release…) est ignorée (`console.warn`) ; seule une erreur d'installation s'affiche.
+
+### Signature
+
+Tauri refuse tout binaire non signé avec la clé correspondant à `pubkey` (paire générée par `npm run tauri signer generate`).
+- **Clé publique** : dans `tauri.conf.json`.
+- **Clé privée** : secrets GitHub `TAURI_SIGNING_PRIVATE_KEY` (+ `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`, vide si la clé n'a pas de mot de passe). **À sauvegarder** : sans elle, les installations existantes ne pourront plus jamais se mettre à jour.
+- Ce n'est pas une signature de code : sans certificat, Windows SmartScreen et macOS Gatekeeper avertissent à la première installation.
+
+### Publier une release
+
+```bash
+npm run bump -- 0.2.0                              # package.json, package-lock.json, tauri.conf.json, Cargo.toml
+cargo check --manifest-path src-tauri/Cargo.toml   # met à jour Cargo.lock
+git commit -am "chore(release): v0.2.0"
+git tag v0.2.0 && git push origin develop v0.2.0
+```
+
+`.github/workflows/release.yml` se déclenche sur le tag `v*` : il vérifie que le tag correspond à la version de `tauri.conf.json`, construit Windows, macOS (arm64 + x64) et Linux avec `tauri-action`, signe, crée la release en **brouillon**, puis un job `publish` la publie quand toutes les plateformes ont terminé (l'endpoint `latest.json` ne sert donc jamais une release incomplète). Chaque release doit avoir une version strictement supérieure à la précédente.
 
 ---
 
