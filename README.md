@@ -80,12 +80,14 @@ src/
 │   ├── PackageRow.tsx       # single package comparison row
 │   ├── Settings.tsx         # settings modal (URL, interval, groups)
 │   ├── NotificationPanel.tsx
+│   ├── UpdateBanner.tsx     # "new version available" banner
 │   └── ToastContainer.tsx
 ├── hooks/
 │   ├── useConfig.ts         # load / save config via Tauri command
 │   ├── usePackageVersions.ts# TanStack Query polling per package
 │   ├── useNotifications.ts
-│   └── useToast.ts
+│   ├── useToast.ts
+│   └── useUpdater.ts        # checks GitHub Releases for a newer version
 └── types.ts
 
 src-tauri/src/
@@ -96,6 +98,21 @@ src-tauri/src/
 ```
 
 ---
+
+## Auto-update & releases
+
+Installed apps check GitHub Releases at startup and every 6 hours, and show a banner with an **Install and restart** button when a newer version exists. Nothing is installed without a click.
+
+To publish a release:
+
+```bash
+npm run bump -- 0.2.0
+cargo check --manifest-path src-tauri/Cargo.toml
+git commit -am "chore(release): v0.2.0"
+git tag v0.2.0 && git push origin develop v0.2.0
+```
+
+The `Release` workflow builds Windows, macOS (Apple Silicon + Intel) and Linux, signs the updater artifacts and publishes the release. It needs the repository secrets `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`; **back up the private key** — without it, installed apps can no longer update. The installers are not code-signed, so Windows SmartScreen / macOS Gatekeeper warn on first install.
 
 ## Architecture Notes
 
