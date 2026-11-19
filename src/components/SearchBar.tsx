@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface Props {
   value: string;
@@ -8,13 +9,13 @@ interface Props {
 export function SearchBar({ value, onChange }: Props) {
   return (
     <div className="relative">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-      <input
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
+      <Input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Filtrer les packages..."
-        className="pl-9 pr-4 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+        className="pl-9 w-64 h-9"
       />
     </div>
   );

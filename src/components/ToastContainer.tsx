@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { X, ArrowUpCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { Toast } from "../hooks/useToast";
 
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {
@@ -16,34 +17,38 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
 
   return (
     <div
+      role="status"
       style={{
         transform: visible ? "translateX(0)" : "translateX(calc(100% + 1rem))",
         opacity: visible ? 1 : 0,
         transition: "transform 0.25s ease-out, opacity 0.25s ease-out",
       }}
-      className="w-72 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden"
+      className="w-72 bg-popover text-popover-foreground ring-1 ring-foreground/10 rounded-lg shadow-lg overflow-hidden"
     >
       <div className="p-3 flex items-start gap-2.5">
         <div className="mt-0.5 shrink-0 text-blue-500">
           <ArrowUpCircle size={14} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-gray-800">
+          <p className="text-xs font-semibold">
             Nouvelle version
-            <span className="font-normal text-gray-400"> · {toast.packageName}</span>
+            <span className="font-normal text-muted-foreground"> · {toast.packageName}</span>
           </p>
-          <p className="text-xs text-gray-500 mt-0.5 truncate">
+          <p className="text-xs text-muted-foreground mt-0.5 truncate">
             {parts.join(" | ")}
           </p>
         </div>
-        <button
+        <Button
+          variant="ghost"
+          size="icon-xs"
           onClick={onDismiss}
-          className="shrink-0 text-gray-400 hover:text-gray-600 transition-colors mt-0.5"
+          aria-label="Fermer"
+          className="shrink-0 -mt-0.5 -mr-1 text-muted-foreground"
         >
-          <X size={12} />
-        </button>
+          <X />
+        </Button>
       </div>
-      <div className="h-0.5 bg-gray-100">
+      <div className="h-0.5 bg-muted">
         <div
           className="h-full bg-blue-500"
           style={{ animation: "toastProgress 5s linear forwards" }}
