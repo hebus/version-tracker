@@ -5,6 +5,8 @@ import { PackageTable } from "./components/PackageTable";
 import { Settings } from "./components/Settings";
 import { ToastContainer } from "./components/ToastContainer";
 import { NotificationPanel } from "./components/NotificationPanel";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { useConfig } from "./hooks/useConfig";
 import { usePackageVersions } from "./hooks/usePackageVersions";
 import { useToast } from "./hooks/useToast";
@@ -35,14 +37,14 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50 text-gray-400 text-sm">
+      <div className="flex items-center justify-center h-screen bg-background text-muted-foreground text-sm">
         Chargement...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-background text-foreground">
       {!updater.dismissed && (
         <UpdateBanner
           status={updater.status}
@@ -53,47 +55,52 @@ export default function App() {
           onDismiss={updater.dismiss}
         />
       )}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+      <header className="bg-card border-b px-6 py-4 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Version Tracker</h1>
-          <p className="text-xs text-gray-400 mt-0.5">@sinequa — npmjs vs Verdaccio</p>
+          <h1 className="text-xl font-bold">Version Tracker</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">@sinequa — npmjs vs Verdaccio</p>
         </div>
         <div className="flex items-center gap-3">
           <SearchBar value={search} onChange={setSearch} />
 
-          <div className="relative">
-            <button
-              onClick={() => setShowNotifications((v) => !v)}
-              className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-800 transition-colors"
-              title="Notifications"
+          <Popover open={showNotifications} onOpenChange={setShowNotifications}>
+            <PopoverTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative text-muted-foreground"
+                  title="Notifications"
+                  aria-label="Notifications"
+                />
+              }
             >
-              <Bell className="w-5 h-5" />
+              <Bell className="size-5" />
               {unreadCount > 0 && (
                 <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
                 </span>
               )}
-            </button>
+            </PopoverTrigger>
+            <NotificationPanel
+              notifications={notifications}
+              onMarkRead={markRead}
+              onMarkAllRead={markAllRead}
+              onRemove={remove}
+            />
+          </Popover>
 
-            {showNotifications && (
-              <NotificationPanel
-                notifications={notifications}
-                onMarkRead={markRead}
-                onMarkAllRead={markAllRead}
-                onRemove={remove}
-                onClose={() => setShowNotifications(false)}
-              />
-            )}
-          </div>
-
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setShowSettings(true)}
-            className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-800 transition-colors"
+            className="text-muted-foreground"
             title="Paramètres"
+            aria-label="Paramètres"
           >
-            <SettingsIcon className="w-5 h-5" />
-          </button>
+            <SettingsIcon className="size-5" />
+          </Button>
         </div>
       </header>
 

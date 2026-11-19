@@ -1,5 +1,15 @@
 import { useState } from "react";
 import { X, Plus, Trash2, FolderPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { Config, PackageGroup } from "../types";
 import { generateId } from "../types";
 
@@ -26,21 +36,23 @@ function AddPackageRow({ existingPackages, onAdd }: AddPackageRowProps) {
 
   return (
     <div className="flex gap-1.5 mt-2">
-      <input
+      <Input
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && submit()}
         placeholder="@sinequa/xxx"
-        className="flex-1 px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 font-mono"
+        aria-label="Nom du package à ajouter"
+        className="flex-1 h-7 text-xs font-mono"
       />
-      <button
+      <Button
+        size="icon-sm"
         onClick={submit}
         disabled={!value.trim()}
-        className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-40 transition-colors"
+        aria-label="Ajouter le package"
       >
-        <Plus className="w-3.5 h-3.5" />
-      </button>
+        <Plus />
+      </Button>
     </div>
   );
 }
@@ -109,49 +121,46 @@ export function Settings({ config, onSave, onClose }: Props) {
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-lg flex flex-col max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        className="sm:max-w-lg max-h-[90vh] flex flex-col gap-0 p-0"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
-          <h2 className="text-lg font-semibold text-gray-800">Paramètres</h2>
-          <button
+        <DialogHeader className="flex-row items-center justify-between px-6 py-4 border-b shrink-0">
+          <DialogTitle className="text-lg font-semibold">Paramètres</DialogTitle>
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="Fermer"
+            className="text-muted-foreground"
           >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+            <X />
+          </Button>
+        </DialogHeader>
 
         {/* Scrollable body */}
         <div className="overflow-y-auto px-6 py-4 space-y-5 flex-1">
           {/* Verdaccio URL */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              URL Verdaccio
-            </label>
-            <input
+          <div className="space-y-1.5">
+            <Label htmlFor="verdaccio-url">URL Verdaccio</Label>
+            <Input
+              id="verdaccio-url"
               type="url"
               value={local.verdaccioUrl}
               onChange={(e) =>
                 setLocal((prev) => ({ ...prev, verdaccioUrl: e.target.value }))
               }
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="h-9"
             />
           </div>
 
           {/* Refresh interval */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Intervalle de rafraîchissement
-            </label>
+          <div className="space-y-1.5">
+            <Label htmlFor="refresh-interval">Intervalle de rafraîchissement</Label>
             <div className="flex items-center gap-2">
-              <input
+              <Input
+                id="refresh-interval"
                 type="number"
                 min={60}
                 step={60}
@@ -162,9 +171,9 @@ export function Settings({ config, onSave, onClose }: Props) {
                     refreshInterval: Number(e.target.value),
                   }))
                 }
-                className="w-28 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-28 h-9"
               />
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-muted-foreground">
                 secondes ({Math.round(local.refreshInterval / 60)} min)
               </span>
             </div>
@@ -172,54 +181,54 @@ export function Settings({ config, onSave, onClose }: Props) {
 
           {/* Groups */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Groupes de packages
-            </label>
+            <Label className="mb-3">Groupes de packages</Label>
 
             <div className="space-y-3">
               {local.groups.map((group: PackageGroup, groupIdx: number) => (
-                <div
-                  key={group.id}
-                  className="border border-gray-200 rounded-xl p-3"
-                >
+                <div key={group.id} className="border rounded-xl p-3">
                   {/* Group header */}
                   <div className="flex items-center gap-2 mb-2">
-                    <input
+                    <Input
                       value={group.name}
                       onChange={(e) => updateGroupName(groupIdx, e.target.value)}
-                      className="flex-1 text-sm font-semibold px-2 py-1 rounded border border-transparent hover:border-gray-200 focus:border-blue-400 focus:outline-none bg-transparent"
+                      aria-label="Nom du groupe"
+                      className="flex-1 h-7 text-sm font-semibold border-transparent bg-transparent shadow-none hover:border-input dark:bg-transparent"
                       placeholder="Nom du groupe"
                     />
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => removeGroup(groupIdx)}
-                      className="text-gray-300 hover:text-red-400 transition-colors shrink-0"
                       title="Supprimer ce groupe"
+                      aria-label="Supprimer ce groupe"
+                      className="text-muted-foreground hover:text-destructive shrink-0"
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                      <Trash2 />
+                    </Button>
                   </div>
 
                   {/* Packages */}
                   <div className="space-y-1">
                     {group.packages.length === 0 && (
-                      <p className="text-xs text-gray-400 italic px-1">
+                      <p className="text-xs text-muted-foreground italic px-1">
                         Aucun package dans ce groupe
                       </p>
                     )}
                     {group.packages.map((pkg) => (
                       <div
                         key={pkg}
-                        className="flex items-center justify-between px-2 py-1 bg-gray-50 rounded-lg"
+                        className="flex items-center justify-between pl-2 pr-1 py-0.5 bg-muted/60 rounded-lg"
                       >
-                        <span className="font-mono text-xs text-gray-700">
-                          {pkg}
-                        </span>
-                        <button
+                        <span className="font-mono text-xs">{pkg}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
                           onClick={() => removePackageFromGroup(groupIdx, pkg)}
-                          className="text-gray-300 hover:text-red-400 transition-colors ml-2 shrink-0"
+                          aria-label={`Retirer ${pkg}`}
+                          className="text-muted-foreground hover:text-destructive ml-2 shrink-0"
                         >
-                          <X className="w-3 h-3" />
-                        </button>
+                          <X />
+                        </Button>
                       </div>
                     ))}
                   </div>
@@ -232,33 +241,26 @@ export function Settings({ config, onSave, onClose }: Props) {
               ))}
             </div>
 
-            <button
+            <Button
+              variant="outline"
               onClick={addGroup}
-              className="mt-3 w-full py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-colors flex items-center justify-center gap-2"
+              className="mt-3 w-full h-10 border-2 border-dashed text-muted-foreground"
             >
-              <FolderPlus className="w-4 h-4" />
+              <FolderPlus />
               Nouveau groupe
-            </button>
+            </Button>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex gap-3 justify-end px-6 py-4 border-t border-gray-100 shrink-0">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
-          >
+        <DialogFooter className="mx-0 mb-0 px-6 py-4 shrink-0">
+          <Button variant="ghost" onClick={onClose}>
             Annuler
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="px-5 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60 transition-colors"
-          >
+          </Button>
+          <Button onClick={handleSave} disabled={saving}>
             {saving ? "Enregistrement..." : "Enregistrer"}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

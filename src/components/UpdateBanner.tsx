@@ -1,4 +1,7 @@
 import { Download, RefreshCw, X } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { UpdaterStatus } from "../hooks/useUpdater";
 
 interface Props {
@@ -17,12 +20,12 @@ export function UpdateBanner({ status, version, progress, error, onInstall, onDi
   const failed = status === "error";
 
   return (
-    <div
-      className={`flex items-center justify-between gap-3 px-6 py-2 border-b text-xs ${
-        failed
-          ? "bg-red-50 border-red-200 text-red-700"
-          : "bg-blue-50 border-blue-200 text-blue-700"
-      }`}
+    <Alert
+      variant={failed ? "destructive" : "default"}
+      className={cn(
+        "flex items-center justify-between gap-3 rounded-none border-x-0 border-t-0 px-6 py-2 text-xs",
+        !failed && "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300",
+      )}
     >
       <div className="flex items-center gap-2 min-w-0">
         {installing ? (
@@ -41,21 +44,20 @@ export function UpdateBanner({ status, version, progress, error, onInstall, onDi
 
       {!installing && (
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={onInstall}
-            className="px-2.5 py-1 rounded bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
-          >
+          <Button size="xs" onClick={onInstall}>
             {failed ? "Réessayer" : "Installer et redémarrer"}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-xs"
             onClick={onDismiss}
             title="Plus tard"
-            className="p-1 rounded hover:bg-blue-100 transition-colors"
+            aria-label="Plus tard"
           >
-            <X className="w-3.5 h-3.5" />
-          </button>
+            <X />
+          </Button>
         </div>
       )}
-    </div>
+    </Alert>
   );
 }

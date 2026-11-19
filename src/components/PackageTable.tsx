@@ -1,6 +1,16 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { PackageRow } from "./PackageRow";
 import type { PackageGroup, PackageVersions, Config } from "../types";
 import type { VersionQueryMap } from "../hooks/usePackageVersions";
@@ -30,22 +40,25 @@ function GroupSection({ group, queryMap, verdaccioUrl, search, onRefresh }: Grou
 
   return (
     <>
-      <tr className="bg-blue-50/60 border-y border-blue-100">
-        <td colSpan={7} className="py-2 px-4">
-          <button
+      <TableRow className="bg-muted/60 hover:bg-muted/60">
+        <TableCell colSpan={7} className="py-2 px-4">
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setCollapsed(!collapsed)}
-            className="flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-900 transition-colors"
+            aria-expanded={!collapsed}
+            className="h-auto -ml-2 px-2 py-1 gap-2 font-semibold"
           >
             <ChevronDown
-              className={`w-4 h-4 transition-transform duration-200 ${collapsed ? "-rotate-90" : ""}`}
+              className={cn("transition-transform duration-200", collapsed && "-rotate-90")}
             />
             {group.name}
-            <span className="font-normal text-blue-400">
+            <span className="font-normal text-muted-foreground">
               ({filtered.length} package{filtered.length > 1 ? "s" : ""})
             </span>
-          </button>
-        </td>
-      </tr>
+          </Button>
+        </TableCell>
+      </TableRow>
 
       {!collapsed &&
         filtered.map((pkg) => {
@@ -87,7 +100,7 @@ export function PackageTable({ queryMap, config, search }: Props) {
 
   if (totalPackages === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
         <p className="text-lg font-medium">Aucun package configuré</p>
         <p className="text-sm mt-1">
           Ouvre les paramètres pour ajouter des groupes et des packages à surveiller.
@@ -97,34 +110,36 @@ export function PackageTable({ queryMap, config, search }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
-        <span className="text-sm text-gray-500">
+    <div className="bg-card rounded-xl border overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/40">
+        <span className="text-sm text-muted-foreground">
           {config.groups.length} groupe{config.groups.length > 1 ? "s" : ""} —{" "}
           {totalPackages} package{totalPackages > 1 ? "s" : ""}
         </span>
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={refetchAll}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+          className="text-muted-foreground"
         >
-          <RefreshCw className="w-3.5 h-3.5" />
+          <RefreshCw />
           Tout rafraîchir
-        </button>
+        </Button>
       </div>
 
-      <table className="w-full">
-        <thead>
-          <tr className="text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100 bg-gray-50/50">
-            <th className="py-2 px-4 text-left font-medium">Package</th>
-            <th className="py-2 px-4 text-left font-medium">npmjs</th>
-            <th className="py-2 px-4 text-left font-medium">Publié</th>
-            <th className="py-2 px-4 text-left font-medium">Verdaccio</th>
-            <th className="py-2 px-4 text-left font-medium">Publié</th>
-            <th className="py-2 px-4 text-left font-medium">Statut</th>
-            <th className="py-2 px-4" />
-          </tr>
-        </thead>
-        <tbody>
+      <Table>
+        <TableHeader>
+          <TableRow className="text-xs text-muted-foreground uppercase tracking-wide bg-muted/20 hover:bg-muted/20">
+            <TableHead className="h-auto py-2 px-4 font-medium">Package</TableHead>
+            <TableHead className="h-auto py-2 px-4 font-medium">npmjs</TableHead>
+            <TableHead className="h-auto py-2 px-4 font-medium">Publié</TableHead>
+            <TableHead className="h-auto py-2 px-4 font-medium">Verdaccio</TableHead>
+            <TableHead className="h-auto py-2 px-4 font-medium">Publié</TableHead>
+            <TableHead className="h-auto py-2 px-4 font-medium">Statut</TableHead>
+            <TableHead className="h-auto py-2 px-4" />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {(config.groups ?? []).map((group) => (
             <GroupSection
               key={group.id}
@@ -139,8 +154,8 @@ export function PackageTable({ queryMap, config, search }: Props) {
               }
             />
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }
